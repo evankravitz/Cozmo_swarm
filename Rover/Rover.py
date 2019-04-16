@@ -9,8 +9,7 @@ import sys
 
 class Mission(Enum):
 	PLACE_CUBE_FLOOR = 1
-	STACK_CUBE_CEILING = 2
-	DO_NOTHING = 3
+	DO_NOTHING = 2
 	
 class CurrentAction(Enum):
 	NOT_SET = 0
@@ -58,9 +57,6 @@ class Rover:
 				self.run_fsm_impl()
 			elif self.action == CurrentAction.PLACE_CUBE_FLOOR:
 				self.mission = Mission.DO_NOTHING
-			
-		elif self.mission == Mission.STACK_CUBE_CEILING:
-			pass
 			
 		elif self.mission == Mission.DO_NOTHING:
 			pass
