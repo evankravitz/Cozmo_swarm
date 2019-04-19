@@ -3,6 +3,8 @@ import cozmo
 from cozmo.objects import CustomObject, CustomObjectMarkers, CustomObjectTypes, ObservableElement, ObservableObject
 from cozmo.util import Pose
 import sys
+import os
+import subprocess
 
 
 
@@ -21,10 +23,17 @@ class CurrentAction(Enum):
 class Rover:
 	
 	def __init__(self):
+		
+		self.CONTROLLER_IP = ""
+		self.ROBOT_ID = 0
+		
+		
 		self.mission = Mission.PLACE_CUBE_FLOOR
 		self.active = True
 		self.robot = None
-			
+		
+
+	
 	def run(self, robot: cozmo.robot.Robot):
 		self.robot = robot
 		
@@ -44,6 +53,14 @@ class Rover:
                                                        
         
 		self.run_fsm_impl()
+	
+	def can_fetch_cube(cube_id):
+		os.system('bash get_permission_to_pickup_cube.sh %s %d %d' % (self.CONTROLLER_IP, self.ROBOT_ID, cube_id))
+		output = subprocess.check_output(['bash', 'get_response_from_controller.sh', self.CONTROLLER_IP, str(self.ROBOT_ID)])
+		if int(output[-2]) == 1:
+			return True
+		return False
+		
 	
 	def run_fsm_impl(self):
 		if self.mission == Mission.PLACE_CUBE_FLOOR:
