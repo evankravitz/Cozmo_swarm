@@ -11,20 +11,22 @@ class Controller:
 		self.run()
 		
 	def setup(self):
-		os.system('mkfifo fifo_controller_read')
+		#os.system('mkfifo fifo_controller_read')
+		pass
 		
 	def run(self):
 		while True:
 			output = subprocess.check_output(['cat', 'fifo_controller_read']).decode('UTF-8').split()
+			print(output)
 			print(int(output[0]))
 			print(int(output[1]))
-		#	robot_id = int(output[0])
-	#		cube_num = int(output[1])
-#			if not self.cubes[cube_num]:#
-#				self.cubes[cube_num] = True
-#				os.system('echo 1 > fifo_' + robot_id + '_read')
-#			else:
-#				os.system('echo 0 > fifo_' + robot_id + '_read')
+			robot_id = int(output[0])
+			cube_num = int(output[1])
+			if not self.cubes[cube_num]:#
+				self.cubes[cube_num] = True
+				os.system('echo 1 > fifo_' + str(robot_id) + '_read')
+			else:
+				os.system('echo 0 > fifo_' + str(robot_id) + '_read')
 	
 		
 
