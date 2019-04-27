@@ -39,7 +39,7 @@ def pickupCube(robot):
     
     robot.set_lift_height(height = 0, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
     look_around = robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
-    cubes = robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=30)
+    cubes = robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=20)
     look_around.stop()
     
     if len(cubes) > 0:
@@ -140,8 +140,8 @@ def custom_objects(robot: cozmo.robot.Robot):
 
 
     custom_box = robot.world.define_custom_box(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, \
-                                                       marker_front=cozmo.objects.CustomObjectMarkers.Circles2, \
-                                                       marker_back=cozmo.objects.CustomObjectMarkers.Circles3, \
+                                                       marker_back=cozmo.objects.CustomObjectMarkers.Circles2, \
+                                                       marker_front=cozmo.objects.CustomObjectMarkers.Circles3, \
                                                        marker_top=cozmo.objects.CustomObjectMarkers.Circles4, \
                                                        marker_bottom=cozmo.objects.CustomObjectMarkers.Circles5, \
                                                        marker_left=cozmo.objects.CustomObjectMarkers.Diamonds2, \
@@ -149,8 +149,8 @@ def custom_objects(robot: cozmo.robot.Robot):
                                                        depth_mm=60, \
                                                        width_mm=60, \
                                                        height_mm=45, \
-                                                       marker_width_mm=24.892, \
-                                                       marker_height_mm=24.892, \
+                                                       marker_width_mm=17.86, \
+                                                       marker_height_mm=17.86, \
                                                        is_unique=True)
     
     if (custom_box is not None):
