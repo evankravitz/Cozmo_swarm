@@ -39,7 +39,7 @@ def pickupCube(robot):
     
     robot.set_lift_height(height = 0, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
     look_around = robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
-    cubes = robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=30)
+    cubes = robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=20)
     look_around.stop()
     
     if len(cubes) > 0:
