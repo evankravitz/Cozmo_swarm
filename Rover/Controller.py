@@ -1,6 +1,5 @@
 import os
 import subprocess
-import stat
 
 
 class Controller:
@@ -15,17 +14,13 @@ class Controller:
 		self.run()
 		
 	def setup(self):
-		try:
-			stat.S_ISFIFO(os.stat('fifo_controller_read'))
-		except FileNotFoundError:
+		if not os.path.exists('fifo_controller_read'):
 			os.system('mkfifo fifo_controller_read')
 
 		for i in range(self.NUM_COZMOS):
-			try:
-				stat.S_ISFIFO(os.stat('fifo_' + str(i) + '_read'))
-
-			except FileNotFoundError:
+			if not os.path.exists('fifo_' + str(i) + '_read'):
 				os.system('mkfifo fifo_' + str(i) + '_read')
+
 
 
 	def run(self):
