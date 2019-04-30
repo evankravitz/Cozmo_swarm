@@ -36,7 +36,7 @@ class Controller:
 
 			if request_id == 0: #cube pickup permission
 
-				if not self.cubes_for_pickup[cube_num]:#
+				if not self.cubes_for_pickup[cube_num]:
 					self.cubes_for_pickup[cube_num] = True
 					os.system('echo 1 > fifo_' + str(robot_id) + '_read')
 				else:
