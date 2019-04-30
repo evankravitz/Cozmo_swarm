@@ -11,7 +11,7 @@ class Controller:
 		self.run()
 		
 	def setup(self):
-		os.system('mkfifo fifo_controller_read')
+		#os.system('mkfifo fifo_controller_read')
 		pass
 		
 	def run(self):
