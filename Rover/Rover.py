@@ -33,10 +33,10 @@ class Rover:
 		self.BLOCK_PLACEMENT_GRID_WIDTH = block_placement_grid_width
 
 		self.custom_boxes = []
-		self.mission = Mission.PLACE_CUBE_FLOOR
+		self.mission = Mission.FLOOR_CUBE_PLACEMENT
 		self.active = True
 		self.robot = None
-		self.custom_object_type_map = dict{}
+		self.custom_object_type_map = dict()
 
 
 
@@ -110,7 +110,7 @@ class Rover:
 				for cube_id in cube_ids:
 					if abs(cube_id.pose.position.y - self.robot.pose.position.y) < 10:
 						if self.can_dropoff_cube(column_num):
-							self.dropoff_cube()
+							self.dropoff_cube(cube_id)
 							return
 						else:
 							pass
@@ -238,14 +238,14 @@ class Rover:
 
 		
 		
-	def dropoff_cube(self):
+	def dropoff_cube(self, cube_id):
 		dist_tolerance = 110
 		dist_to_move_into_spot = 30
 
 
-		cube_x = cube.pose.position.x
-		cube_y = cube.pose.position.y
-		cube_z_angle = cube.pose.rotation.angle_z.radians
+		cube_x = cube_id.pose.position.x
+		cube_y = cube_id.pose.position.y
+		cube_z_angle = cube_id.pose.rotation.angle_z.radians
 
 		dx = self.robot.pose.position.x - cube_x
 		dy = self.robot.pose.position.y - cube_y
@@ -302,5 +302,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(cozmo, controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2)
+	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2)
 	cozmo.run_program(rover.run)
