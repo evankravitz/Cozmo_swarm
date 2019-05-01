@@ -68,16 +68,12 @@ class Rover:
 	def can_fetch_cube(self, cube_id):
 		os.system('bash get_permission_to_pickup_cube.sh %s %d %d' % (self.CONTROLLER_IP, self.ROBOT_ID, cube_id))
 		output = subprocess.check_output(['bash', 'get_response_from_controller.sh', self.CONTROLLER_IP, str(self.ROBOT_ID)])
-		if int(output[-2]) == 1:
-			return True
-		return False
+		return int(output[-2]) == 1
 
 	def can_dropoff_cube(self, column_num):
 		os.system('bash get_permission_to_dropoff_cube.sh %s %d %d' % (self.CONTROLLER_IP, self.ROBOT_ID, column_num))
 		output = subprocess.check_output(['bash', 'get_response_from_controller.sh', self.CONTROLLER_IP, str(self.ROBOT_ID)])
-		if int(output[-2]) == 1:
-			return True
-		return False
+		return int(output[-2]) == 1
 	
 	def run_fsm_impl(self):
 		if self.mission == Mission.FLOOR_CUBE_PLACEMENT:
@@ -110,14 +106,16 @@ class Rover:
 		for column_num in range(self.BLOCK_PLACEMENT_GRID_WIDTH):
 			self.robot.turn_in_place(degrees(90)).wait_for_completed()
 			cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
-			if len(cube_ids) == 1:
-				if self.can_dropoff_cube(column_num):
-					self.dropoff_cube()
-					return
-				else: #another Cozmo is using the column
-					pass
+			if len(cube_ids) > 0:
+				for cube_id in cube_ids:
+					if abs(cube_id.pose.position.y - self.robot.pose.position.y) < 10:
+						if self.can_dropoff_cube(column_num):
+							self.dropoff_cube()
+							return
+						else:
+							pass
 			else:
-				raise ValueError("Cannot find cube dropoff spot where it should be")
+				raise ValueError("Cannot find cube dropoff spot where there should be one")
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 			self.robot.drive_straight(distance_mm(60), speed_mmps(50)).wait_for_completed()
 
@@ -146,105 +144,161 @@ class Rover:
 				self.robot.turn_in_place(degrees(30)).wait_for_completed()
 				cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
 				if len(cube) == 0:
-					self.robot.turn_in_place(degrees(-30)).wait_for_completed()
+					self.robot.turn_in_place(degrees(-60)).wait_for_completed()
 					cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
 					if len(cube) == 1:
 						if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
-							self.pickup_cube()
+							self.pickup_cube(cube)
 							return
 						else:
-							self.robot.turn_in_place(degrees(-90)).wait_for_completed()
+							self.robot.turn_in_place(degrees(-60)).wait_for_completed()
 				else:
 					if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
-						self.pickup_cube()
+						self.pickup_cube(cube)
 						return
 
 			else:
 				if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
-					self.pickup_cube()
+					self.pickup_cube(cube)
 					return
 
 
 
 
 
-	def pickup_cube(self):
+	def pickup_cube(self, cube):
 		
 		dist_tolerance = 110
 		dist_to_move_into_cube = 90
     
 		self.robot.set_lift_height(height = 0, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
-		look_around = self.robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
-		cubes = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=30)
-		look_around.stop()
-    
-		if len(cubes) > 0:
-        
-			dx = self.robot.pose.position.x - cubes[0].pose.position.x
-			dy = self.robot.pose.position.y - cubes[0].pose.position.y
+
+		cube_x = cube.pose.position.x
+		cube_y = cube.pose.position.y
+		cube_z_angle = cube.pose.rotation.angle_z.radians
+
+		dx = self.robot.pose.position.x - cube_x
+		dy = self.robot.pose.position.y - cube_y
+		dist = (dx**2 + dy**2)**0.5
+
+
+		while dist > dist_tolerance:
+
+			a = math.tan(cube_z_angle)
+			b = cube_y - cube_x*a
+			# the second line y=dx is the line between pose and origine, perpendicular to
+
+			d = -1/a
+			x = b/(d - a)
+			y = d*x
+
+			self.robot.go_to_pose(Pose(x, y, 0, angle_z = degrees(0)), relative_to_robot = False, num_retries = 0, in_parallel = False).wait_for_completed()
+
+			#differece between cube and cozmo, to aligne them
+
+
+
+			angle_to_turn = cube_z_angle - self.robot.pose.rotation.angle_z.radians # want -(difference angle)
+			self.robot.turn_in_place(radians(angle_to_turn)).wait_for_completed()
+
+
+			dx = self.robot.pose.position.x - cube_x
+			dy = self.robot.pose.position.y - cube_y
 			dist = (dx**2 + dy**2)**0.5
-        
-        
-			while dist > dist_tolerance:
-				cubex = cubes[0].pose.position.x
-				cubey = cubes[0].pose.position.y
-				dis =  math.sqrt(cubex*cubex + cubey*cubey)
-				cube_z = cubes[0].pose.rotation.angle_z.radians #pos if pos gradient, neg if neg gradient in x/y plane 
-				#look for y=ax+b atan(cube_z)=gradient; b is intersection on y
-            
-				a = math.tan(cube_z)
-				b = cubey-cubex*a
-				# the second line y=dx is the line between pose and origine, perpendicular to 
-            
-				d=-1/(a)
-				x=b/(d-a)
-				y=d*x
-            
-				self.robot.go_to_pose(Pose(x,y,0,angle_z=degrees(0)),relative_to_robot=False,num_retries=0,in_parallel=False).wait_for_completed()
-            
-				#differece between cube and cozmo, to aligne them 
-            
-            
 
-				angle1=cubes[0].pose.rotation.angle_z.radians-robot.pose.rotation.angle_z.radians # want -(difference angle)
-				self.robot.turn_in_place(radians(angle1)).wait_for_completed()
-            
-            
-				dx = (self.robot.pose.position.x - cubes[0].pose.position.x)
-				dy = (self.robot.pose.position.y - cubes[0].pose.position.y)
-				dist = (dx**2 + dy**2)**0.5
-            
-				dist_per_iteration = dist*0.75
-                        
-				self.robot.drive_straight(distance_mm(dist_per_iteration),speed_mmps(50)).wait_for_completed()
-            
-            
-				dx = (robot.pose.position.x - cubes[0].pose.position.x)
-				dy = (robot.pose.position.y - cubes[0].pose.position.y)
-				dist = (dx**2 + dy**2)**0.5
-                      
-            
-				if dist > dist_tolerance:
-					look_around = self.robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
-					cubes = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=10)
-					look_around.stop()
+			dist_per_iteration = dist*0.65
+
+			self.robot.drive_straight(distance_mm(dist_per_iteration), speed_mmps(50)).wait_for_completed()
 
 
-					if len(cubes) == 0:
-						print("Lost cube.")
-						return
-						
-						
-			self.robot.drive_straight(distance_mm(dist_to_move_into_cube),speed_mmps(50)).wait_for_completed()
-			self.robot.set_lift_height(height = 1, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
+			dx = self.robot.pose.position.x - cube_x
+			dy = self.robot.pose.position.y - cube_y
+			dist = (dx**2 + dy**2)**0.5
 
-        
-    else:
-        print("Cannot locate custom box")
+
+			if dist > dist_tolerance:
+				look_around = self.robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
+				cubes = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout = 5)
+				look_around.stop()
+
+
+				if len(cubes) == 0:
+					print("Lost cube.")
+					return
+				else:
+					cube_x = cubes[0].pose.position.x
+					cube_y = cubes[0].pose.position.y
+					cube_z_angle = cubes[0].pose.rotation.angle_z.radians
+
+
+		self.robot.drive_straight(distance_mm(dist_to_move_into_cube), speed_mmps(50)).wait_for_completed()
+		self.robot.set_lift_height(height = 1, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
+
+
+
 		
 		
 	def dropoff_cube(self):
-		pass
+		dist_tolerance = 110
+		dist_to_move_into_spot = 30
+
+
+		cube_x = cube.pose.position.x
+		cube_y = cube.pose.position.y
+		cube_z_angle = cube.pose.rotation.angle_z.radians
+
+		dx = self.robot.pose.position.x - cube_x
+		dy = self.robot.pose.position.y - cube_y
+		dist = (dx ** 2 + dy ** 2) ** 0.5
+
+		while dist > dist_tolerance:
+
+			a = math.tan(cube_z_angle)
+			b = cube_y - cube_x * a
+			# the second line y=dx is the line between pose and origine, perpendicular to
+
+			d = -1 / a
+			x = b / (d - a)
+			y = d * x
+
+			self.robot.go_to_pose(Pose(x, y, 0, angle_z=degrees(0)), relative_to_robot=False, num_retries=0,
+								  in_parallel=False).wait_for_completed()
+
+			# differece between cube and cozmo, to aligne them
+
+
+
+			angle_to_turn = cube_z_angle - self.robot.pose.rotation.angle_z.radians  # want -(difference angle)
+			self.robot.turn_in_place(radians(angle_to_turn)).wait_for_completed()
+
+			dx = self.robot.pose.position.x - cube_x
+			dy = self.robot.pose.position.y - cube_y
+			dist = (dx ** 2 + dy ** 2) ** 0.5
+
+			dist_per_iteration = dist * 0.65
+
+			self.robot.drive_straight(distance_mm(dist_per_iteration), speed_mmps(50)).wait_for_completed()
+
+			dx = self.robot.pose.position.x - cube_x
+			dy = self.robot.pose.position.y - cube_y
+			dist = (dx ** 2 + dy ** 2) ** 0.5
+
+			if dist > dist_tolerance:
+				look_around = self.robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
+				cubes = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=5)
+				look_around.stop()
+
+				if len(cubes) == 0:
+					print("Lost cube.")
+					return
+				else:
+					cube_x = cubes[0].pose.position.x
+					cube_y = cubes[0].pose.position.y
+					cube_z_angle = cubes[0].pose.rotation.angle_z.radians
+
+		self.robot.drive_straight(distance_mm(dist_to_move_into_spot), speed_mmps(50)).wait_for_completed()
+		self.robot.set_lift_height(height=0, accel=6, max_speed=500, duration=1, in_parallel=False,
+								   num_retries=3).wait_for_completed()
 
 
 if __name__ == "__main__":
