@@ -99,10 +99,10 @@ class Rover:
 	def place_cube(self):
 
 		#move Cozmo to initial pose
-		self.robot.go_to_pose(Pose(0, 0, 0, angle_z=degrees(0)), relative_to_robot=False, num_retries=0, in_parallel=False).wait_for_completed()
+		self.robot.go_to_pose(Pose(0, 0, 0, angle_z=degrees(90)), relative_to_robot=False, num_retries=0, in_parallel=False).wait_for_completed()
 
 
-		self.robot.turn_in_place(degrees(90)).wait_for_completed()
+#		self.robot.turn_in_place(degrees(90)).wait_for_completed()
 
 		self.robot.drive_straight(distance_mm(self.CUBE_PLACEMENT_DISTANCE + 30), speed_mmps(50)).wait_for_completed()
 
