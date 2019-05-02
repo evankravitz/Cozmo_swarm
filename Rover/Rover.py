@@ -109,24 +109,18 @@ class Rover:
 
 		for column_num in range(self.BLOCK_PLACEMENT_GRID_WIDTH):
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
-			cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
-			if len(cube_ids) > 0:
-				curr_min = float('inf')
-				curr_min_idx = None
-				for i in range(len(cube_ids)):
-					if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
-						curr_mind = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
-						curr_min_idx = i
-				if self.can_dropoff_cube(column_num):
-					self.dropoff_cube(cube_ids[curr_min_idx], column_num)
-					return
-				else:
-					pass
-			else:
-				raise ValueError("Cannot find cube dropoff spot where there should be one")
+			if self.can_dropoff_cube(column_num):
+				cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
+				if len(cube_ids) > 0:
+					curr_min = float('inf')
+					curr_min_idx = None
+					for i in range(len(cube_ids)):
+						if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
+							curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
+							curr_min_idx = i
+					return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 			self.robot.drive_straight(distance_mm(60), speed_mmps(50)).wait_for_completed()
-
 
 		raise ValueError("No space available to drop-off cube")
 
