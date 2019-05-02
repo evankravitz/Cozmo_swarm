@@ -75,6 +75,9 @@ class Rover:
 		os.system('bash get_permission_to_dropoff_cube.sh %s %d %d' % (self.CONTROLLER_IP, self.ROBOT_ID, column_num))
 		output = subprocess.check_output(['bash', 'get_response_from_controller.sh', self.CONTROLLER_IP, str(self.ROBOT_ID)]).decode('UTF-8')
 		return int(output[-2]) == 1
+
+	def send_cube_dropoff_ack(self, column_num):
+		os.system('bash send_cube_placement_ack.sh %s %d %d' % (self.CONTROLLER_IP, self.ROBOT_ID, column_num))
 	
 	def run_fsm_impl(self):
 		if self.mission == Mission.FLOOR_CUBE_PLACEMENT:
@@ -115,7 +118,7 @@ class Rover:
 						curr_mind = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
 						curr_min_idx = i
 				if self.can_dropoff_cube(column_num):
-					self.dropoff_cube(cube_ids[curr_min_idx])
+					self.dropoff_cube(cube_ids[curr_min_idx], column_num)
 					return
 				else:
 					pass
@@ -255,7 +258,7 @@ class Rover:
 
 		
 		
-	def dropoff_cube(self, cube_id):
+	def dropoff_cube(self, cube_id, column_num):
 		dist_tolerance = 200
 		dist_to_move_into_spot = 0
 
@@ -316,6 +319,7 @@ class Rover:
 		self.robot.drive_straight(distance_mm(dist_to_move_into_spot), speed_mmps(50)).wait_for_completed()
 		self.robot.set_lift_height(height=0, accel=6, max_speed=500, duration=1, in_parallel=False,
 								   num_retries=3).wait_for_completed()
+		self.send_cube_dropoff_ack(column_num)
 
 
 if __name__ == "__main__":
