@@ -153,7 +153,7 @@ class Rover:
 
 		for i in range(30):
 
-			self.robot.drive_straight(distance_mm(30), speed_mmps(50)).wait_for_completed()
+			self.robot.drive_straight(distance_mm(90), speed_mmps(50)).wait_for_completed()
 
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 
