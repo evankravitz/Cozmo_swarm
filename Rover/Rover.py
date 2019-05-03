@@ -43,6 +43,21 @@ class Rover:
 
 	def define_custom_boxes(self):
 		custom_box_0 = self.robot.world.define_custom_box(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, \
+												   marker_front=cozmo.objects.CustomObjectMarkers.Triangles5, \
+												   marker_back=cozmo.objects.CustomObjectMarkers.Circles3, \
+												   marker_top=cozmo.objects.CustomObjectMarkers.Circles4, \
+												   marker_bottom=cozmo.objects.CustomObjectMarkers.Circles5, \
+												   marker_left=cozmo.objects.CustomObjectMarkers.Diamonds2, \
+												   marker_right=cozmo.objects.CustomObjectMarkers.Diamonds3, \
+												   depth_mm=60, \
+												   width_mm=60, \
+												   height_mm=45, \
+												   marker_width_mm=23, \
+												   marker_height_mm=23, \
+												   is_unique=True)
+
+
+		custom_box_1 = self.robot.world.define_custom_box(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, \
 												   marker_front=cozmo.objects.CustomObjectMarkers.Circles2, \
 												   marker_back=cozmo.objects.CustomObjectMarkers.Circles3, \
 												   marker_top=cozmo.objects.CustomObjectMarkers.Circles4, \
@@ -52,12 +67,14 @@ class Rover:
 												   depth_mm=60, \
 												   width_mm=60, \
 												   height_mm=45, \
-												   marker_width_mm=17.86, \
-												   marker_height_mm=17.86, \
+												   marker_width_mm=23, \
+												   marker_height_mm=23, \
 												   is_unique=True)
 
 		self.custom_boxes.append(custom_box_0)
+		self.custom_boxes.append(custom_box_1)
 		self.custom_object_type_map[custom_box_0.object_type] = 0
+		self.custom_object_type_map[custom_box_1.object_type] = 1
 
 	def run(self, robot: cozmo.robot.Robot):
 		self.robot = robot
@@ -109,24 +126,18 @@ class Rover:
 
 		for column_num in range(self.BLOCK_PLACEMENT_GRID_WIDTH):
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
-			cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
-			if len(cube_ids) > 0:
-				curr_min = float('inf')
-				curr_min_idx = None
-				for i in range(len(cube_ids)):
-					if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
-						curr_mind = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
-						curr_min_idx = i
-				if self.can_dropoff_cube(column_num):
-					self.dropoff_cube(cube_ids[curr_min_idx], column_num)
-					return
-				else:
-					pass
-			else:
-				raise ValueError("Cannot find cube dropoff spot where there should be one")
+			if self.can_dropoff_cube(column_num):
+				cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
+				if len(cube_ids) > 0:
+					curr_min = float('inf')
+					curr_min_idx = None
+					for i in range(len(cube_ids)):
+						if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
+							curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
+							curr_min_idx = i
+					return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 			self.robot.drive_straight(distance_mm(60), speed_mmps(50)).wait_for_completed()
-
 
 		raise ValueError("No space available to drop-off cube")
 

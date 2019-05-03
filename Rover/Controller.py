@@ -48,7 +48,7 @@ class Controller:
 					self.cubes_for_placement[column_num] = True
 					os.system('echo 1 > fifo_' + str(robot_id) + '_read')
 				else:
-					os.system('echo 1 > fifo_' + str(robot_id) + '_read')
+					os.system('echo 0 > fifo_' + str(robot_id) + '_read')
 
 			elif request_id == 2:
 				if self.cubes_for_placement[column_num]:
