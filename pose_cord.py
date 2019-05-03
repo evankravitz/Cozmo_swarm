@@ -68,19 +68,20 @@ def pickupCube(robot):
             
             #differece between cube and cozmo, to aligne them 
             
-            
+            print('here')
 
             angle1=cubes[0].pose.rotation.angle_z.radians-robot.pose.rotation.angle_z.radians # want -(difference angle)
+            
             robot.turn_in_place(radians(angle1)).wait_for_completed()
             
             
             dx = (robot.pose.position.x - cubes[0].pose.position.x)
             dy = (robot.pose.position.y - cubes[0].pose.position.y)
             dist = (dx**2 + dy**2)**0.5
-            
-            dist_per_iteration = dist*0.75
+            print('here2')
+            #dist_per_iteration = dist*0.75
                         
-            robot.drive_straight(distance_mm(dist_per_iteration),speed_mmps(50)).wait_for_completed()
+            robot.drive_straight(distance_mm(dist),speed_mmps(50)).wait_for_completed()
             
             
             dx = (robot.pose.position.x - cubes[0].pose.position.x)
@@ -140,8 +141,8 @@ def custom_objects(robot: cozmo.robot.Robot):
 
 
     custom_box = robot.world.define_custom_box(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, \
-                                                       marker_back=cozmo.objects.CustomObjectMarkers.Circles2, \
-                                                       marker_front=cozmo.objects.CustomObjectMarkers.Circles3, \
+                                                       marker_back=cozmo.objects.CustomObjectMarkers.Circles3, \
+                                                       marker_front=cozmo.objects.CustomObjectMarkers.Triangles5, \
                                                        marker_top=cozmo.objects.CustomObjectMarkers.Circles4, \
                                                        marker_bottom=cozmo.objects.CustomObjectMarkers.Circles5, \
                                                        marker_left=cozmo.objects.CustomObjectMarkers.Diamonds2, \
@@ -149,8 +150,8 @@ def custom_objects(robot: cozmo.robot.Robot):
                                                        depth_mm=60, \
                                                        width_mm=60, \
                                                        height_mm=45, \
-                                                       marker_width_mm=17.86, \
-                                                       marker_height_mm=17.86, \
+                                                       marker_width_mm=23, \
+                                                       marker_height_mm=23, \
                                                        is_unique=True)
     
     if (custom_box is not None):
