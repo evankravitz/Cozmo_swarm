@@ -26,35 +26,37 @@ class Controller:
 	def run(self):
 		while True:
 			output = subprocess.check_output(['cat', 'fifo_controller_read']).decode('UTF-8').split()
-			robot_id = int(output[0])
-			request_id = int(output[1])
-			if request_id == 0: #cube pickup permission
-				cube_num = int(output[2])
-			elif request_id == 1 or request_id == 2: #cube placement permission or cube placement completion acknowledgement
-				column_num = int(output[2])
+			for i in range(len(output)//3):
+				sub_output = output[i*3 : i*3 + 3]
+				robot_id = int(sub_output[0])
+				request_id = int(sub_output[1])
+				if request_id == 0: #cube pickup permission
+					cube_num = int(sub_output[2])
+				elif request_id == 1 or request_id == 2: #cube placement permission or cube placement completion acknowledgement
+					column_num = int(sub_output[2])
 
 
-			if request_id == 0: #cube pickup permission
+				if request_id == 0: #cube pickup permission
 
-				if not self.cubes_for_pickup[cube_num]:
-					self.cubes_for_pickup[cube_num] = True
-					os.system('echo 1 > fifo_' + str(robot_id) + '_read')
-				else:
-					os.system('echo 0 > fifo_' + str(robot_id) + '_read')
+					if not self.cubes_for_pickup[cube_num]:
+						self.cubes_for_pickup[cube_num] = True
+						os.system('echo 1 > fifo_' + str(robot_id) + '_read')
+					else:
+						os.system('echo 0 > fifo_' + str(robot_id) + '_read')
 
-			elif request_id == 1:
+				elif request_id == 1:
 
-				if not self.cubes_for_placement[column_num]:
-					self.cubes_for_placement[column_num] = True
-					os.system('echo 1 > fifo_' + str(robot_id) + '_read')
-				else:
-					os.system('echo 0 > fifo_' + str(robot_id) + '_read')
+					if not self.cubes_for_placement[column_num]:
+						self.cubes_for_placement[column_num] = True
+						os.system('echo 1 > fifo_' + str(robot_id) + '_read')
+					else:
+						os.system('echo 0 > fifo_' + str(robot_id) + '_read')
 
-			elif request_id == 2:
-				if self.cubes_for_placement[column_num]:
-					self.cubes_for_placement[column_num] = False
-				else:
-					raise ValueError("Cozmo finished a column block placement that it did not get permission to do")
+				elif request_id == 2:
+					if self.cubes_for_placement[column_num]:
+						self.cubes_for_placement[column_num] = False
+					else:
+						raise ValueError("Cozmo finished a column block placement that it did not get permission to do")
 
 
 if __name__ == "__main__":
