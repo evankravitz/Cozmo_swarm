@@ -42,36 +42,18 @@ class Rover:
 
 
 	def define_custom_boxes(self):
-		custom_box_0 = self.robot.world.define_custom_box(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, \
-												   marker_front=cozmo.objects.CustomObjectMarkers.Triangles5, \
-												   marker_back=cozmo.objects.CustomObjectMarkers.Circles3, \
-												   marker_top=cozmo.objects.CustomObjectMarkers.Circles4, \
-												   marker_bottom=cozmo.objects.CustomObjectMarkers.Circles5, \
-												   marker_left=cozmo.objects.CustomObjectMarkers.Diamonds2, \
-												   marker_right=cozmo.objects.CustomObjectMarkers.Diamonds3, \
-												   depth_mm=60, \
-												   width_mm=60, \
-												   height_mm=45, \
-												   marker_width_mm=23, \
-												   marker_height_mm=23, \
-												   is_unique=True)
+		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Triangles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
+		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+				   
+		wall_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Diamonds5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
-		custom_box_1 = self.robot.world.define_custom_box(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, \
-												   marker_front=cozmo.objects.CustomObjectMarkers.Circles2, \
-												   marker_back=cozmo.objects.CustomObjectMarkers.Triangles4, \
-												   marker_top=cozmo.objects.CustomObjectMarkers.Diamonds5, \
-												   marker_bottom=cozmo.objects.CustomObjectMarkers.Triangles3, \
-												   marker_left=cozmo.objects.CustomObjectMarkers.Diamonds4, \
-												   marker_right=cozmo.objects.CustomObjectMarkers.Triangles2, \
-												   depth_mm=60, \
-												   width_mm=60, \
-												   height_mm=45, \
-												   marker_width_mm=23, \
-												   marker_height_mm=23, \
-												   is_unique=True)
 												   
-		print(custom_box_1)
+		wall_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Circles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+
+												   
+
+
 
 		self.custom_boxes.append(custom_box_0)
 		self.custom_boxes.append(custom_box_1)
