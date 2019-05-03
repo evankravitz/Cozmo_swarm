@@ -42,14 +42,14 @@ class Rover:
 
 
 	def define_custom_boxes(self):
-		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Triangles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Hexagons3, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
-		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 				   
-		wall_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Diamonds5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		wall_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType02, marker=cozmo.objects.CustomObjectMarkers.Diamonds5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
 												   
-		wall_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Circles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		wall_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType03, marker=cozmo.objects.CustomObjectMarkers.Circles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
 												   
 
@@ -113,6 +113,7 @@ class Rover:
 			if self.can_dropoff_cube(column_num):
 				cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
 				if len(cube_ids) > 0:
+					print("Found dropoff spot")
 					curr_min = float('inf')
 					curr_min_idx = None
 					for i in range(len(cube_ids)):
@@ -179,6 +180,8 @@ class Rover:
 
 
 	def pickup_cube(self, cube):
+		
+		print('found cube')
 		
 		dist_tolerance = 110
 		dist_to_move_into_cube = 30
@@ -318,5 +321,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.170", robot_id = 0, block_placement_grid_width = 2)
+	rover = Rover(controller_ip = "10.148.2.170", robot_id = 1, block_placement_grid_width = 2)
 	cozmo.run_program(rover.run)
