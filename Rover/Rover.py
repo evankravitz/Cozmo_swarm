@@ -121,7 +121,7 @@ class Rover:
 							curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
 							curr_min_idx = i
 					return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
-			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
+			self.robot.turn_in_place(degrees(90)).wait_for_completed()
 			self.robot.drive_straight(distance_mm(60), speed_mmps(50)).wait_for_completed()
 
 		raise ValueError("No space available to drop-off cube")
@@ -143,14 +143,14 @@ class Rover:
 
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 
-			cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
+			cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
 
 			if len(cube) == 0:
 				self.robot.turn_in_place(degrees(-30)).wait_for_completed()
-				cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
+				cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
 				if len(cube) == 0:
 					self.robot.turn_in_place(degrees(60)).wait_for_completed()
-					cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
+					cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
 					if len(cube) == 1:
 						if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
 							self.pickup_cube(cube[0])
@@ -174,7 +174,7 @@ class Rover:
 					self.robot.turn_in_place(degrees(90)).wait_for_completed()
 
 				
-		step_size *= 1.5
+			step_size *= 1.5
 
 
 
@@ -185,7 +185,7 @@ class Rover:
 		print('found cube')
 		
 		dist_tolerance = 110
-		dist_to_move_into_cube = 30
+		dist_to_move_into_cube = 50
     
 		self.robot.set_lift_height(height = 0, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
 
@@ -208,14 +208,9 @@ class Rover:
 			x = b/(d - a)
 			y = d*x
 
-			self.robot.go_to_pose(Pose(x, y, 0, angle_z = degrees(0)), relative_to_robot = False, num_retries = 0, in_parallel = False).wait_for_completed()
+			self.robot.go_to_pose(Pose(x, y, 0, angle_z = radians(cube_z_angle)), relative_to_robot = False, num_retries = 0, in_parallel = False).wait_for_completed()
 
 			#differece between cube and cozmo, to aligne them
-
-
-
-			angle_to_turn = cube_z_angle - self.robot.pose.rotation.angle_z.radians # want -(difference angle)
-			self.robot.turn_in_place(radians(angle_to_turn)).wait_for_completed()
 
 
 			dx = self.robot.pose.position.x - cube_x
@@ -315,5 +310,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.133", robot_id = 1, block_placement_grid_width = 2)
+	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2)
 	cozmo.run_program(rover.run)
