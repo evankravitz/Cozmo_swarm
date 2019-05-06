@@ -279,15 +279,8 @@ class Rover:
 			x = b / (d - a)
 			y = d * x
 
-			self.robot.go_to_pose(Pose(x, y, 0, angle_z=degrees(0)), relative_to_robot=False, num_retries=0,
+			self.robot.go_to_pose(Pose(x, y, 0, angle_z=radians(cube_z_angle)), relative_to_robot=False, num_retries=0,
 								  in_parallel=False).wait_for_completed()
-
-			# differece between cube and cozmo, to aligne them
-
-
-
-			angle_to_turn = cube_z_angle - self.robot.pose.rotation.angle_z.radians  # want -(difference angle)
-			self.robot.turn_in_place(radians(angle_to_turn)).wait_for_completed()
 
 			dx = self.robot.pose.position.x - cube_x
 			dy = self.robot.pose.position.y - cube_y
