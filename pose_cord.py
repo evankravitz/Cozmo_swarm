@@ -34,70 +34,85 @@ print(sys.path)
 
 def pickupCube(robot):
     
-    dist_tolerance = 110
+    dist_tolerance = 40
     dist_to_move_into_cube = 90
     
     robot.set_lift_height(height = 0, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
     look_around = robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
     cubes = robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=20)
     look_around.stop()
-    
+    find=False
     if len(cubes) > 0:
         
         dx = robot.pose.position.x - cubes[0].pose.position.x
         dy = robot.pose.position.y - cubes[0].pose.position.y
         dist = (dx**2 + dy**2)**0.5
-        
-        
-        while dist > dist_tolerance:
+
+        while find==False:
             cubex=cubes[0].pose.position.x
             cubey=cubes[0].pose.position.y
             dis=sqrt(cubex*cubex+cubey*cubey)
             cube_z=cubes[0].pose.rotation.angle_z.radians #pos if pos gradient, neg if neg gradient in x/y plane 
-            #look for y=ax+b atan(cube_z)=gradient; b is intersection on y
-            
-            a=tan(cube_z)
-            b=cubey-cubex*a
-            # the second line y=dx is the line between pose and origine, perpendicular to 
+            #look for x=ay+b  a=cubex/cubey=1/tan(cubez) tan(cubez)=y/x
+            a=1/tan(cube_z)
+            b=cubex-cubey*a
+            # the second line x=dy is the line between pose and origine, perpendicular to 
             
             d=-1/(a)
-            x=b/(d-a)
-            y=d*x
+            y=b/(d-a)
+            x=d*y
+            #print('cubes[0].pose :')
+            #print(cubes[0].pose)
+            #print('robot.pose1 :')
+            #print(robot.pose)
+            #print('x:',x, ' y:',y,' cube_z:',cube_z,' a:',a, ' b:',b,' d:',d)
+            
             
             robot.go_to_pose(Pose(x,y,0,angle_z=degrees(0)),relative_to_robot=False,num_retries=0,in_parallel=False).wait_for_completed() 
+
             
             #differece between cube and cozmo, to aligne them 
             
             print('here')
 
             angle1=cubes[0].pose.rotation.angle_z.radians-robot.pose.rotation.angle_z.radians # want -(difference angle)
-            
             robot.turn_in_place(radians(angle1)).wait_for_completed()
-            
-            
-            dx = (robot.pose.position.x - cubes[0].pose.position.x)
-            dy = (robot.pose.position.y - cubes[0].pose.position.y)
-            dist = (dx**2 + dy**2)**0.5
-            print('here2')
-            #dist_per_iteration = dist*0.75
-                        
-            robot.drive_straight(distance_mm(dist),speed_mmps(50)).wait_for_completed()
-            
-            
-            dx = (robot.pose.position.x - cubes[0].pose.position.x)
-            dy = (robot.pose.position.y - cubes[0].pose.position.y)
-            dist = (dx**2 + dy**2)**0.5
-                      
-            
-            if dist > dist_tolerance:
-                look_around = robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
-                cubes = robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=10)
-                look_around.stop()
+            #print('different rad: ',angle1, ' radians: ',radians(angle1))
+            #print('robot.pose : after')
+            #print(robot.pose)
 
+            dx = (x - robot.pose.position.x)
+            dy = (y - robot.pose.position.y)
+            diff=math.sqrt(dx**2+dy**2)
+            
+            print('diff: ',diff)
+            #print('going to smaller')
+            ang=cubes[0].pose.rotation.angle_z.radians-robot.pose.rotation.angle_z.radians
+            print('diff angle: ',ang)
 
-                if len(cubes) == 0:
-                    print("Lost cube.")
-                    return
+            if (diff<10 and ang<0.08):
+                print('smaller than tolerance')
+                dx = (robot.pose.position.x - cubes[0].pose.position.x)
+                dy = (robot.pose.position.y - cubes[0].pose.position.y)
+                dist = (dx**2 + dy**2)**0.5
+                robot.drive_straight(distance_mm(dist),speed_mmps(50)).wait_for_completed()
+                find=True
+            else:
+                print('bigger than tolerance')
+                cubes=[]
+                while(len(cubes)==0):
+                    look_around = robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
+                    cubes = robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=5)
+                    look_around.stop()
+                    if(len(cubes)==0):
+                        robot.drive_straight(distance_mm(-50),speed_mmps(50)).wait_for_completed()
+                        print('not find')
+                robot.drive_straight(distance_mm(dist*0.5),speed_mmps(50)).wait_for_completed()
+
+            
+            
+           
+            
         robot.drive_straight(distance_mm(dist_to_move_into_cube),speed_mmps(50)).wait_for_completed()
         robot.set_lift_height(height = 1, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
 
@@ -142,7 +157,7 @@ def custom_objects(robot: cozmo.robot.Robot):
 
     custom_box = robot.world.define_custom_box(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, \
                                                        marker_back=cozmo.objects.CustomObjectMarkers.Circles3, \
-                                                       marker_front=cozmo.objects.CustomObjectMarkers.Triangles5, \
+                                                       marker_front=cozmo.objects.CustomObjectMarkers.Circles2, \
                                                        marker_top=cozmo.objects.CustomObjectMarkers.Circles4, \
                                                        marker_bottom=cozmo.objects.CustomObjectMarkers.Circles5, \
                                                        marker_left=cozmo.objects.CustomObjectMarkers.Diamonds2, \
@@ -150,8 +165,8 @@ def custom_objects(robot: cozmo.robot.Robot):
                                                        depth_mm=60, \
                                                        width_mm=60, \
                                                        height_mm=45, \
-                                                       marker_width_mm=23, \
-                                                       marker_height_mm=23, \
+                                                       marker_width_mm=17, \
+                                                       marker_height_mm=17, \
                                                        is_unique=True)
     
     if (custom_box is not None):
@@ -166,12 +181,13 @@ def custom_objects(robot: cozmo.robot.Robot):
 
     #print("Press CTRL-C to quit")
 
-    print('robot_initial: ',robot.pose.rotation.angle_z.degrees)
+    #print('robot_initial: ',robot.pose.rotation.angle_z.degrees)
     #cubes = lookForCubes(robot, 45, 0)
     
-    print('robot.pose.position_beforelook: \n')
+    #print('robot.pose.position_beforelook: \n')
+    #print(robot.pose)
+    print('robot.pose1 :')
     print(robot.pose)
-    
     pickupCube(robot)
     
 

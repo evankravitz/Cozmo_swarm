@@ -42,14 +42,14 @@ class Rover:
 
 
 	def define_custom_boxes(self):
-		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Triangles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Hexagons3, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
-		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 				   
-		wall_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Diamonds5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		wall_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType02, marker=cozmo.objects.CustomObjectMarkers.Diamonds5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
 												   
-		wall_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Circles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		wall_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType03, marker=cozmo.objects.CustomObjectMarkers.Circles5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
 												   
 
@@ -179,6 +179,8 @@ class Rover:
 
 
 	def pickup_cube(self, cube):
+		
+		print('found cube')
 		
 		dist_tolerance = 110
 		dist_to_move_into_cube = 30
