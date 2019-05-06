@@ -113,6 +113,7 @@ class Rover:
 			if self.can_dropoff_cube(column_num):
 				cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
 				if len(cube_ids) > 0:
+					print("Found dropoff spot")
 					curr_min = float('inf')
 					curr_min_idx = None
 					for i in range(len(cube_ids)):
@@ -320,5 +321,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.170", robot_id = 0, block_placement_grid_width = 2)
+	rover = Rover(controller_ip = "10.148.2.170", robot_id = 1, block_placement_grid_width = 2)
 	cozmo.run_program(rover.run)
