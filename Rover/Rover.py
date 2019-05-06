@@ -132,13 +132,14 @@ class Rover:
 
 	def retrieve_cube(self):
 		self.robot.set_lift_height(height = 0, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
-
+		
+		step_size = 30
 
 		#Move parallel to where cubes are initially placed, scan for cubes
 
 		for i in range(30):
 
-			self.robot.drive_straight(distance_mm(90), speed_mmps(50)).wait_for_completed()
+			self.robot.drive_straight(distance_mm(step_size), speed_mmps(50)).wait_for_completed()
 
 			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 
@@ -173,7 +174,7 @@ class Rover:
 					self.robot.turn_in_place(degrees(90)).wait_for_completed()
 
 				
-
+		step_size *= 1.5
 
 
 
@@ -314,5 +315,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.170", robot_id = 1, block_placement_grid_width = 2)
+	rover = Rover(controller_ip = "10.148.2.133", robot_id = 1, block_placement_grid_width = 2)
 	cozmo.run_program(rover.run)
