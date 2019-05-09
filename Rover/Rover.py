@@ -32,7 +32,7 @@ class Rover:
 		self.CUBE_PLACEMENT_DISTANCE_R = 150 #mm
 		self.CUBE_PLACEMENT_DISTANCE_L = 110 #mm
 
-		self.wall_displacement_distance = 300
+		self.wall_displacement_distance = 250
 
 
 		self.BLOCK_PLACEMENT_GRID_WIDTH = block_placement_grid_width
@@ -50,7 +50,7 @@ class Rover:
 	def define_custom_boxes(self):
 		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Triangles4, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
-		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, marker=cozmo.objects.CustomObjectMarkers.Hexagons4, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 				   
 		wall_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType02, marker=cozmo.objects.CustomObjectMarkers.Diamonds5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
@@ -101,6 +101,7 @@ class Rover:
 				pass
 			
 	def go_to_original_position(self):
+		self.robot.drive_straight(distance_mm(-60), speed_mmps(50)).wait_for_completed()
 		self.robot.go_to_pose(Pose(0, 0, 0, angle_z=degrees(0)), relative_to_robot=False, num_retries=0,
 								  in_parallel=False).wait_for_completed()
 			
@@ -335,7 +336,7 @@ class Rover:
 
 
 		self.robot.drive_straight(distance_mm(dist_to_move_into_cube), speed_mmps(50)).wait_for_completed()
-		self.robot.set_lift_height(height = 1, accel = 6, max_speed = 500, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
+		self.robot.set_lift_height(height = 1, accel = 6, max_speed = 200, duration = 1, in_parallel = False, num_retries = 3).wait_for_completed()
 		
 		self.robot.turn_in_place(degrees(-180)).wait_for_completed()
 		self.robot.drive_straight(distance_mm(50), speed_mmps(50)).wait_for_completed()
@@ -345,9 +346,6 @@ class Rover:
 		
 		
 	def dropoff_cube(self, cube_id, column_num):
-		dist_tolerance = 200
-		dist_to_move_into_spot = 0
-
 
 		cube_x = cube_id.pose.position.x
 		cube_y = cube_id.pose.position.y
@@ -357,45 +355,43 @@ class Rover:
 		dy = self.robot.pose.position.y - cube_y
 		dist = (dx ** 2 + dy ** 2) ** 0.5
 
-		while dist > dist_tolerance:
+		a = math.tan(cube_z_angle)
+		b = cube_y - cube_x * a
+		# the second line y=dx is the line between pose and origine, perpendicular to
 
-			a = math.tan(cube_z_angle)
-			b = cube_y - cube_x * a
-			# the second line y=dx is the line between pose and origine, perpendicular to
+		d = -1 / a
+		x = b / (d - a)
+		y = d * x
 
-			d = -1 / a
-			x = b / (d - a)
-			y = d * x
-
-			self.robot.go_to_pose(Pose(x, y, 0, angle_z=radians(cube_z_angle)), relative_to_robot=False, num_retries=0,
+		self.robot.go_to_pose(Pose(x, y, 0, angle_z=radians(cube_z_angle)), relative_to_robot=False, num_retries=0,
 								  in_parallel=False).wait_for_completed()
 
-			dx = self.robot.pose.position.x - cube_x
-			dy = self.robot.pose.position.y - cube_y
-			dist = (dx ** 2 + dy ** 2) ** 0.5
+		dx = self.robot.pose.position.x - cube_x
+		dy = self.robot.pose.position.y - cube_y
+		dist = (dx ** 2 + dy ** 2) ** 0.5
 
-			dist_per_iteration = (dist - 120) * 1
+		dist_per_iteration = (dist - 120) * 1
 
-			self.robot.drive_straight(distance_mm(dist_per_iteration), speed_mmps(50)).wait_for_completed()
+		self.robot.drive_straight(distance_mm(dist_per_iteration), speed_mmps(50)).wait_for_completed()
 
-			dx = self.robot.pose.position.x - cube_x
-			dy = self.robot.pose.position.y - cube_y
-			dist = (dx ** 2 + dy ** 2) ** 0.5
+		dx = self.robot.pose.position.x - cube_x
+		dy = self.robot.pose.position.y - cube_y
+		dist = (dx ** 2 + dy ** 2) ** 0.5
 
-			if dist > dist_tolerance:
-				look_around = self.robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
-				cubes = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=5)
-				look_around.stop()
+			#if dist > dist_tolerance:
+			#	look_around = self.robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
+			#	cubes = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=5)
+			#	look_around.stop()
 
-				if len(cubes) == 0:
-					print("Lost cube.")
-					return
-				else:
-					cube_x = cubes[0].pose.position.x
-					cube_y = cubes[0].pose.position.y
-					cube_z_angle = cubes[0].pose.rotation.angle_z.radians
+			#	if len(cubes) == 0:
+			#		print("Lost cube.")
+			#		return
+			#	else:
+			#		cube_x = cubes[0].pose.position.x
+			#		cube_y = cubes[0].pose.position.y
+			#		cube_z_angle = cubes[0].pose.rotation.angle_z.radians
 
-		self.robot.drive_straight(distance_mm(dist_to_move_into_spot), speed_mmps(50)).wait_for_completed()
+		self.robot.drive_straight(distance_mm(30), speed_mmps(50)).wait_for_completed()
 		self.robot.set_lift_height(height=0, accel=6, max_speed=500, duration=1, in_parallel=False,
 								   num_retries=3).wait_for_completed()
 		self.send_cube_dropoff_ack(column_num)
