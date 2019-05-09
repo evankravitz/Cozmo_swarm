@@ -31,7 +31,7 @@ class Rover:
 		self.CUBE_PLACEMENT_DISTANCE_R = 200 #mm
 		self.CUBE_PLACEMENT_DISTANCE_L = 200 #mm
 
-		self.wall_displacement_distance = 20
+		self.wall_displacement_distance = 200
 
 
 		self.BLOCK_PLACEMENT_GRID_WIDTH = block_placement_grid_width
@@ -281,13 +281,13 @@ class Rover:
 
 		while dist > dist_tolerance:
 
-			a=1/tan(cube_z)
-            b=cubex-cubey*a
-            # the second line x=dy is the line between pose and origine, perpendicular to 
-            
-            d=-1/(a)
-            y=b/(d-a)
-            x=d*y
+			a = math.tan(cube_z_angle)
+			b = cube_y - cube_x*a
+			# the second line y=dx is the line between pose and origine, perpendicular to
+
+			d = -1/a
+			x = b/(d - a)
+			y = d*x
 
 			self.robot.go_to_pose(Pose(x, y, 0, angle_z = radians(cube_z_angle)), relative_to_robot = False, num_retries = 0, in_parallel = False).wait_for_completed()
 
@@ -348,14 +348,14 @@ class Rover:
 
 		while dist > dist_tolerance:
 
-			a=1/tan(cube_z)
-            b=cubex-cubey*a
-            # the second line x=dy is the line between pose and origine, perpendicular to 
-            
-            d=-1/(a)
-            y=b/(d-a)
-            x=d*y
-            
+			a = math.tan(cube_z_angle)
+			b = cube_y - cube_x * a
+			# the second line y=dx is the line between pose and origine, perpendicular to
+
+			d = -1 / a
+			x = b / (d - a)
+			y = d * x
+
 			self.robot.go_to_pose(Pose(x, y, 0, angle_z=radians(cube_z_angle)), relative_to_robot=False, num_retries=0,
 								  in_parallel=False).wait_for_completed()
 
