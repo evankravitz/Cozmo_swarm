@@ -29,9 +29,9 @@ class Rover:
 
 		#How far away initial Cozmo placement area is from start of cube placement area
 		self.CUBE_PLACEMENT_DISTANCE_R = 200 #mm
-		self.CUBE_PLACEMENT_DISTANCE_L = 200 #mm
+		self.CUBE_PLACEMENT_DISTANCE_L = 110 #mm
 
-		self.wall_displacement_distance = 200
+		self.wall_displacement_distance = 300
 
 
 		self.BLOCK_PLACEMENT_GRID_WIDTH = block_placement_grid_width
@@ -47,7 +47,7 @@ class Rover:
 
 
 	def define_custom_boxes(self):
-		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Hexagons3, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Triangles4, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
 		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 				   
@@ -123,9 +123,11 @@ class Rover:
 						curr_min = float('inf')
 						curr_min_idx = None
 						for i in range(len(cube_ids)):
-							if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
-								curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
+							print(cube_ids[i].pose)
+							if curr_min > abs(cube_ids[i].pose.position.y - self.robot.pose.position.y):
+								curr_min = abs(cube_ids[i].pose.position.y - self.robot.pose.position.y)
 								curr_min_idx = i
+						print("printing best cube: " + str(cube_ids[curr_min_idx].pose))
 						return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
 					else:
 						raise ValueError('Couldnt Find Cube')
@@ -152,9 +154,11 @@ class Rover:
 						curr_min = float('inf')
 						curr_min_idx = None
 						for i in range(len(cube_ids)):
-							if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
-								curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
+							print(cube_ids[i].pose)
+							if curr_min > abs(cube_ids[i].pose.position.y - self.robot.pose.position.y):
+								curr_min = abs(cube_ids[i].pose.position.y - self.robot.pose.position.y)
 								curr_min_idx = i
+						print("printing best cube: " + str(cube_ids[curr_min_idx].pose))
 						return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
 					else:
 						raise ValueError('Couldnt Find Cube')
@@ -391,5 +395,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.133", robot_id = 1, block_placement_grid_width = 2, robot_starting_position = 'R')
+	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2, robot_starting_position = 'R')
 	cozmo.run_program(rover.run)
