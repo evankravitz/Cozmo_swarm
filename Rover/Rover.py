@@ -281,13 +281,13 @@ class Rover:
 
 		while dist > dist_tolerance:
 
-			a = math.tan(cube_z_angle)
-			b = cube_y - cube_x*a
-			# the second line y=dx is the line between pose and origine, perpendicular to
-
-			d = -1/a
-			x = b/(d - a)
-			y = d*x
+			a=1/tan(cube_z)
+            b=cubex-cubey*a
+            # the second line x=dy is the line between pose and origine, perpendicular to 
+            
+            d=-1/(a)
+            y=b/(d-a)
+            x=d*y
 
 			self.robot.go_to_pose(Pose(x, y, 0, angle_z = radians(cube_z_angle)), relative_to_robot = False, num_retries = 0, in_parallel = False).wait_for_completed()
 
@@ -348,14 +348,14 @@ class Rover:
 
 		while dist > dist_tolerance:
 
-			a = math.tan(cube_z_angle)
-			b = cube_y - cube_x * a
-			# the second line y=dx is the line between pose and origine, perpendicular to
-
-			d = -1 / a
-			x = b / (d - a)
-			y = d * x
-
+			a=1/tan(cube_z)
+            b=cubex-cubey*a
+            # the second line x=dy is the line between pose and origine, perpendicular to 
+            
+            d=-1/(a)
+            y=b/(d-a)
+            x=d*y
+            
 			self.robot.go_to_pose(Pose(x, y, 0, angle_z=radians(cube_z_angle)), relative_to_robot=False, num_retries=0,
 								  in_parallel=False).wait_for_completed()
 
@@ -391,5 +391,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2, robot_starting_position = 'L')
+	rover = Rover(controller_ip = "10.148.2.133", robot_id = 1, block_placement_grid_width = 2, robot_starting_position = 'R')
 	cozmo.run_program(rover.run)
