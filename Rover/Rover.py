@@ -22,21 +22,26 @@ class CurrentAction(Enum):
 
 class Rover:
 	
-	def __init__(self, controller_ip, robot_id, block_placement_grid_width):
+	def __init__(self, controller_ip, robot_id, block_placement_grid_width, robot_starting_position):
 		
 		self.CONTROLLER_IP = controller_ip
 		self.ROBOT_ID = robot_id
 
 		#How far away initial Cozmo placement area is from start of cube placement area
-		self.CUBE_PLACEMENT_DISTANCE = 200 #mm
+		self.CUBE_PLACEMENT_DISTANCE_R = 200 #mm
+		self.CUBE_PLACEMENT_DISTANCE_L = 200 #mm
+
+		self.wall_displacement_distance = 20
+
 
 		self.BLOCK_PLACEMENT_GRID_WIDTH = block_placement_grid_width
 
-		self.custom_boxes = []
 		self.mission = Mission.FLOOR_CUBE_PLACEMENT
 		self.action = CurrentAction.NOT_SET
 		self.active = True
 		self.robot = None
+
+		self.robot_starting_position = robot_starting_position
 		self.custom_object_type_map = dict()
 
 
@@ -53,10 +58,6 @@ class Rover:
 
 												   
 
-
-
-		self.custom_boxes.append(custom_box_0)
-		self.custom_boxes.append(custom_box_1)
 		self.custom_object_type_map[custom_box_0.object_type] = 0
 		self.custom_object_type_map[custom_box_1.object_type] = 1
 
@@ -100,31 +101,69 @@ class Rover:
 	def place_cube(self):
 
 		#move Cozmo to initial pose
-		self.robot.go_to_pose(Pose(0, 0, 0, angle_z=degrees(90)), relative_to_robot=False, num_retries=0, in_parallel=False).wait_for_completed()
 
 
 #		self.robot.turn_in_place(degrees(90)).wait_for_completed()
 
-		self.robot.drive_straight(distance_mm(self.CUBE_PLACEMENT_DISTANCE + 30), speed_mmps(50)).wait_for_completed()
+
+		if self.robot_starting_position == "R":
+
+			self.robot.go_to_pose(Pose(self.wall_displacement_distance, 0, 0, angle_z=degrees(90)), relative_to_robot=False, num_retries=0,
+								  in_parallel=False).wait_for_completed()
+
+			self.robot.drive_straight(distance_mm(self.CUBE_PLACEMENT_DISTANCE_R + 30), speed_mmps(50)).wait_for_completed()
 
 
-		for column_num in range(self.BLOCK_PLACEMENT_GRID_WIDTH):
-			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
-			if self.can_dropoff_cube(column_num):
-				cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
-				if len(cube_ids) > 0:
-					print("Found dropoff spot")
-					curr_min = float('inf')
-					curr_min_idx = None
-					for i in range(len(cube_ids)):
-						if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
-							curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
-							curr_min_idx = i
-					return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
-			self.robot.turn_in_place(degrees(90)).wait_for_completed()
-			self.robot.drive_straight(distance_mm(60), speed_mmps(50)).wait_for_completed()
+			for column_num in range(self.BLOCK_PLACEMENT_GRID_WIDTH):
+				self.robot.turn_in_place(degrees(-90)).wait_for_completed()
+				if self.can_dropoff_cube(column_num):
+					cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=2)
+					if len(cube_ids) > 0:
+						print("Found dropoff spot")
+						curr_min = float('inf')
+						curr_min_idx = None
+						for i in range(len(cube_ids)):
+							if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
+								curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
+								curr_min_idx = i
+						return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
+					else:
+						raise ValueError('Couldnt Find Cube')
+				self.robot.turn_in_place(degrees(90)).wait_for_completed()
+				self.robot.drive_straight(distance_mm(60), speed_mmps(50)).wait_for_completed()
 
-		raise ValueError("No space available to drop-off cube")
+			raise ValueError("No space available to drop-off cube")
+
+		elif self.robot_starting_position == "L":
+
+			self.robot.go_to_pose(Pose(self.wall_displacement_distance, 0, 0, angle_z=degrees(-90)), relative_to_robot=False, num_retries=0,
+								  in_parallel=False).wait_for_completed()
+
+			self.robot.drive_straight(distance_mm(self.CUBE_PLACEMENT_DISTANCE_L + 30),
+									  speed_mmps(50)).wait_for_completed()
+
+			for column_num in range(self.BLOCK_PLACEMENT_GRID_WIDTH - 1, -1, -1):
+				self.robot.turn_in_place(degrees(90)).wait_for_completed()
+				if self.can_dropoff_cube(column_num):
+					cube_ids = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject,
+																			   timeout=2)
+					if len(cube_ids) > 0:
+						print("Found dropoff spot")
+						curr_min = float('inf')
+						curr_min_idx = None
+						for i in range(len(cube_ids)):
+							if curr_min > abs(cube_ids[i].pose.position.x - self.robot.pose.position.x):
+								curr_min = abs(cube_ids[i].pose.position.x - self.robot.pose.position.x)
+								curr_min_idx = i
+						return self.dropoff_cube(cube_ids[curr_min_idx], column_num)
+					else:
+						raise ValueError('Couldnt Find Cube')
+				self.robot.turn_in_place(degrees(-90)).wait_for_completed()
+				self.robot.drive_straight(distance_mm(60), speed_mmps(50)).wait_for_completed()
+
+			raise ValueError("No space available to drop-off cube")
+
+
 
 
 
@@ -137,45 +176,87 @@ class Rover:
 
 		#Move parallel to where cubes are initially placed, scan for cubes
 
-		for i in range(30):
+		if self.robot_starting_position == "R":
 
-			self.robot.drive_straight(distance_mm(step_size), speed_mmps(50)).wait_for_completed()
+			for i in range(30):
 
-			self.robot.turn_in_place(degrees(-90)).wait_for_completed()
+				self.robot.drive_straight(distance_mm(step_size), speed_mmps(50)).wait_for_completed()
 
-			cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
+				self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 
-			if len(cube) == 0:
-				self.robot.turn_in_place(degrees(-30)).wait_for_completed()
 				cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
+
 				if len(cube) == 0:
-					self.robot.turn_in_place(degrees(60)).wait_for_completed()
+					self.robot.turn_in_place(degrees(-30)).wait_for_completed()
 					cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
-					if len(cube) == 1:
+					if len(cube) == 0:
+						self.robot.turn_in_place(degrees(60)).wait_for_completed()
+						cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
+						if len(cube) == 1:
+							if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
+								self.pickup_cube(cube[0])
+								return
+							else:
+								self.robot.turn_in_place(degrees(60)).wait_for_completed()
+						else:
+							self.robot.turn_in_place(degrees(60)).wait_for_completed()
+					else:
 						if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
 							self.pickup_cube(cube[0])
 							return
 						else:
-							self.robot.turn_in_place(degrees(60)).wait_for_completed()
-					else:
-						self.robot.turn_in_place(degrees(60)).wait_for_completed()
+							self.robot.turn_in_place(degrees(120)).wait_for_completed()
+
 				else:
 					if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
 						self.pickup_cube(cube[0])
 						return
 					else:
-						self.robot.turn_in_place(degrees(120)).wait_for_completed()
+						self.robot.turn_in_place(degrees(90)).wait_for_completed()
 
-			else:
-				if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
-					self.pickup_cube(cube[0])
-					return
+
+				step_size *= 1.5
+
+		elif self.robot_starting_position == "L":
+
+			for i in range(30):
+
+				self.robot.drive_straight(distance_mm(step_size), speed_mmps(50)).wait_for_completed()
+
+				self.robot.turn_in_place(degrees(90)).wait_for_completed()
+
+				cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
+
+				if len(cube) == 0:
+					self.robot.turn_in_place(degrees(30)).wait_for_completed()
+					cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=0.5)
+					if len(cube) == 0:
+						self.robot.turn_in_place(degrees(-60)).wait_for_completed()
+						cube = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject,
+																			   timeout=0.5)
+						if len(cube) == 1:
+							if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
+								self.pickup_cube(cube[0])
+								return
+							else:
+								self.robot.turn_in_place(degrees(-60)).wait_for_completed()
+						else:
+							self.robot.turn_in_place(degrees(-60)).wait_for_completed()
+					else:
+						if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
+							self.pickup_cube(cube[0])
+							return
+						else:
+							self.robot.turn_in_place(degrees(-120)).wait_for_completed()
+
 				else:
-					self.robot.turn_in_place(degrees(90)).wait_for_completed()
+					if self.can_fetch_cube(self.custom_object_type_map[cube[0].object_type]):
+						self.pickup_cube(cube[0])
+						return
+					else:
+						self.robot.turn_in_place(degrees(-90)).wait_for_completed()
 
-				
-			step_size *= 1.5
-
+				step_size *= 1.5
 
 
 
@@ -310,5 +391,5 @@ class Rover:
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2)
+	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2, robot_starting_position = 'L')
 	cozmo.run_program(rover.run)
