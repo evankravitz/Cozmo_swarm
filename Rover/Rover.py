@@ -6,6 +6,7 @@ import sys
 import os
 import subprocess
 import math
+import time
 
 
 
@@ -28,7 +29,7 @@ class Rover:
 		self.ROBOT_ID = robot_id
 
 		#How far away initial Cozmo placement area is from start of cube placement area
-		self.CUBE_PLACEMENT_DISTANCE_R = 200 #mm
+		self.CUBE_PLACEMENT_DISTANCE_R = 150 #mm
 		self.CUBE_PLACEMENT_DISTANCE_L = 110 #mm
 
 		self.wall_displacement_distance = 300
@@ -95,19 +96,25 @@ class Rover:
 				self.mission = Mission.DO_NOTHING
 				self.run_fsm_impl()
 		elif self.mission == Mission.DO_NOTHING:
+			self.go_to_original_position()
 			while True:
 				pass
+			
+	def go_to_original_position(self):
+		self.robot.go_to_pose(Pose(0, 0, 0, angle_z=degrees(0)), relative_to_robot=False, num_retries=0,
+								  in_parallel=False).wait_for_completed()
+			
 				
 	def place_cube(self):
 
-		#move Cozmo to initial pose
 
 
-#		self.robot.turn_in_place(degrees(90)).wait_for_completed()
-
+		
 
 		if self.robot_starting_position == "R":
 
+			time.sleep(5)
+		
 			self.robot.go_to_pose(Pose(self.wall_displacement_distance, 0, 0, angle_z=degrees(90)), relative_to_robot=False, num_retries=0,
 								  in_parallel=False).wait_for_completed()
 
