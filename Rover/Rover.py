@@ -50,7 +50,7 @@ class Rover:
 	def define_custom_boxes(self):
 		custom_box_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType00, marker=cozmo.objects.CustomObjectMarkers.Triangles4, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
-		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, marker=cozmo.objects.CustomObjectMarkers.Hexagons4, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
+		custom_box_1 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType01, marker=cozmo.objects.CustomObjectMarkers.Circles2, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 				   
 		wall_0 = self.robot.world.define_custom_wall(custom_object_type=cozmo.objects.CustomObjectTypes.CustomType02, marker=cozmo.objects.CustomObjectMarkers.Diamonds5, width_mm=60, height_mm=45, marker_width_mm=23, marker_height_mm=23, is_unique=True)
 
@@ -92,8 +92,12 @@ class Rover:
 				self.action = CurrentAction.PLACE_CUBE
 				self.place_cube()
 				self.run_fsm_impl()
+			#elif self.action == CurrentAction.PLACE_CUBE:
+			#	self.mission = Mission.DO_NOTHING
+			#	self.run_fsm_impl()
 			elif self.action == CurrentAction.PLACE_CUBE:
-				self.mission = Mission.DO_NOTHING
+				self.go_to_original_position()
+				self.action = CurrentAction.NOT_SET
 				self.run_fsm_impl()
 		elif self.mission == Mission.DO_NOTHING:
 			self.go_to_original_position()
@@ -374,29 +378,12 @@ class Rover:
 
 		self.robot.drive_straight(distance_mm(dist_per_iteration), speed_mmps(50)).wait_for_completed()
 
-		dx = self.robot.pose.position.x - cube_x
-		dy = self.robot.pose.position.y - cube_y
-		dist = (dx ** 2 + dy ** 2) ** 0.5
-
-			#if dist > dist_tolerance:
-			#	look_around = self.robot.start_behavior(cozmo.behavior.BehaviorTypes.LookAroundInPlace)
-			#	cubes = self.robot.world.wait_until_observe_num_objects(num=1, object_type=CustomObject, timeout=5)
-			#	look_around.stop()
-
-			#	if len(cubes) == 0:
-			#		print("Lost cube.")
-			#		return
-			#	else:
-			#		cube_x = cubes[0].pose.position.x
-			#		cube_y = cubes[0].pose.position.y
-			#		cube_z_angle = cubes[0].pose.rotation.angle_z.radians
-
-		self.robot.drive_straight(distance_mm(30), speed_mmps(50)).wait_for_completed()
+		self.robot.drive_straight(distance_mm(20), speed_mmps(50)).wait_for_completed()
 		self.robot.set_lift_height(height=0, accel=6, max_speed=500, duration=1, in_parallel=False,
 								   num_retries=3).wait_for_completed()
 		self.send_cube_dropoff_ack(column_num)
 
 
 if __name__ == "__main__":
-	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2, robot_starting_position = 'R')
+	rover = Rover(controller_ip = "10.148.2.133", robot_id = 0, block_placement_grid_width = 2, robot_starting_position = 'L')
 	cozmo.run_program(rover.run)
