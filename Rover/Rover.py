@@ -18,7 +18,6 @@ class CurrentAction(Enum):
 	NOT_SET = 0
 	GET_CUBE = 1
 	PLACE_CUBE = 2
-	GO_TO_STAGING_AREA = 3
 
 
 class Rover:
@@ -92,9 +91,6 @@ class Rover:
 				self.action = CurrentAction.PLACE_CUBE
 				self.place_cube()
 				self.run_fsm_impl()
-			#elif self.action == CurrentAction.PLACE_CUBE:
-			#	self.mission = Mission.DO_NOTHING
-			#	self.run_fsm_impl()
 			elif self.action == CurrentAction.PLACE_CUBE:
 				self.go_to_original_position()
 				self.action = CurrentAction.NOT_SET
